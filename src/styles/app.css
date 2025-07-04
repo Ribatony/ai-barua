@@ -1,141 +1,124 @@
-/* Root defaults */
+/* 🌐 Base Font & Theme Setup */
 :root {
-  font-family: 'Segoe UI', system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+  --font-base: 'Segoe UI', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  --color-bg-light: #ffffff;
+  --color-bg-dark: #121212;
+  --color-text-light: #1a1a1a;
+  --color-text-dark: #eaeaea;
+  --color-accent: #7b61ff;
+  --color-accent-alt: #5eead4;
+  --color-muted: #7b7b7b;
+  --radius: 8px;
+  --shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+  font-family: var(--font-base);
   color-scheme: light dark;
-  color: #23272f;
-  background-color: #f4f6fa;
+}
+
+/* 🧱 Layout */
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background: var(--color-bg-light);
+  color: var(--color-text-light);
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Page layout */
-body {
-  margin: 0;
-  padding: 0;
-  min-width: 320px;
-  min-height: 100vh;
-  font-family: inherit;
-  background: #f4f6fa;
-  color: #23272f;
-}
-
-/* App container */
 .app {
-  background: #f4f6fa;
   min-height: 100vh;
-  padding: 2rem 0;
+  padding: 2rem 1rem;
   transition: background 0.3s, color 0.3s;
 }
 
-/* Forms */
+/* ✏️ Form Inputs */
 input,
 select,
 textarea {
-  display: block;
-  margin: 0.5rem 0;
-  padding: 0.7rem;
+  font: inherit;
+  padding: 0.8rem;
   width: 100%;
-  max-width: 420px;
-  font-size: 1rem;
-  box-sizing: border-box;
-  border-radius: 6px;
-  border: 1px solid #d1d5db;
+  max-width: 480px;
+  margin-bottom: 1rem;
+  border-radius: var(--radius);
+  border: 1px solid #ccc;
   background: #fff;
-  color: #23272f;
-  transition: background 0.3s, color 0.3s, border-color 0.3s;
+  color: #1a1a1a;
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow);
 }
 
 input:focus,
 select:focus,
 textarea:focus {
-  border-color: #7b61ff;
-  outline: 2px solid #bcbcff;
+  outline: 2px solid var(--color-accent-alt);
+  border-color: var(--color-accent);
 }
 
-/* Buttons */
+/* 🔘 Buttons */
 button {
-  border-radius: 8px;
-  border: 1px solid #7b61ff;
-  background: linear-gradient(90deg, #7b61ff 0%, #5eead4 100%);
-  color: #fff;
+  font: inherit;
   font-weight: 600;
-  font-family: inherit;
+  padding: 0.8rem 1.4rem;
+  border: none;
+  border-radius: var(--radius);
+  background: linear-gradient(90deg, var(--color-accent) 0%, var(--color-accent-alt) 100%);
+  color: #fff;
   cursor: pointer;
-  padding: 0.7rem 1.5rem;
-  margin-top: 0.5rem;
-  box-shadow: 0 2px 8px rgba(123, 97, 255, 0.08);
-  transition: background 0.3s, border-color 0.3s;
+  box-shadow: 0 3px 10px rgba(123, 97, 255, 0.1);
+  transition: all 0.3s ease;
 }
 
 button:hover {
-  background: linear-gradient(90deg, #5eead4 0%, #7b61ff 100%);
-  border-color: #5eead4;
+  background: linear-gradient(90deg, var(--color-accent-alt) 0%, var(--color-accent) 100%);
 }
 
-button:focus {
-  outline: 3px solid #bcbcff;
-}
-
-/* Letter Output */
+/* 🧾 Preview Box */
 pre {
-  white-space: pre-wrap;
-  background: #f0f1f6;
+  background: #f7f7f9;
   padding: 1.2rem;
-  border-radius: 8px;
-  line-height: 1.6;
-  color: #23272f;
-  border: 1px solid #e0e7ef;
-  margin-bottom: 1rem;
-}
-
-/* Footer (optional) */
-footer {
-  margin-top: 2rem;
+  border-radius: var(--radius);
+  border: 1px solid #e0e0e0;
+  color: #1a1a1a;
   font-size: 0.95rem;
-  color: #7b7b7b;
-  text-align: center;
+  overflow-x: auto;
 }
 
-/* Dark mode */
+/* 📎 Footer */
+footer {
+  text-align: center;
+  margin-top: 2rem;
+  font-size: 0.9rem;
+  color: var(--color-muted);
+}
+
+/* 🌘 Dark Mode Enhancements */
 .app.dark {
-  background: #23272f;
-  color: #f4f6fa;
+  background: var(--color-bg-dark);
+  color: var(--color-text-dark);
 }
 
 .app.dark input,
 .app.dark select,
 .app.dark textarea {
-  background: #2d323c;
-  color: #f4f6fa;
-  border-color: #44495a;
-}
-
-.app.dark input:focus,
-.app.dark select:focus,
-.app.dark textarea:focus {
-  border-color: #5eead4;
-  outline: 2px solid #7b61ff;
-}
-
-.app.dark button {
-  background: linear-gradient(90deg, #5eead4 0%, #7b61ff 100%);
-  color: #23272f;
-  border-color: #5eead4;
-}
-
-.app.dark button:hover {
-  background: linear-gradient(90deg, #7b61ff 0%, #5eead4 100%);
-  border-color: #7b61ff;
+  background: #1e1e1e;
+  color: var(--color-text-dark);
+  border-color: #333;
 }
 
 .app.dark pre {
-  background: #23272f;
-  color: #f4f6fa;
-  border: 1px solid #44495a;
+  background: #1a1a1a;
+  border-color: #333;
+  color: var(--color-text-dark);
+}
+
+.app.dark button {
+  background: linear-gradient(90deg, var(--color-accent-alt) 0%, var(--color-accent) 100%);
+  color: #121212;
 }
 
 .app.dark footer {
-  color: #bcbcff;
+  color: #999;
 }
+
