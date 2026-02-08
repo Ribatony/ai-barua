@@ -1,15 +1,18 @@
 import { CohereClientV2 } from 'cohere-sdk';
 
-const client = new CohereClientV2({ apiKey: 'YOUR_COHERE_API_KEY' });
+const client = new CohereClientV2();
 
-const generateResponse = async (prompt) => {
+async function fetchResponse(prompt) {
     try {
-        const response = await client.generate({ prompt });
+        const response = await client.generate({
+            prompt: prompt,
+            maxTokens: 100
+        });
         return response;
     } catch (error) {
-        console.error('Error generating response:', error);
+        console.error('Error fetching response from Cohere:', error);
         throw error;
     }
-};
+}
 
-export default generateResponse;
+export default fetchResponse;
