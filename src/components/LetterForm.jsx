@@ -1,4 +1,10 @@
+/* eslint-disable no-unused-vars */
 import { useState } from "react";
+import { OpenRouter } from "@openrouter/sdk";
+
+const openRouter = new OpenRouter({
+  apiKey: import.meta.env.VITE_OPENROUTER_API_KEY,
+});
 
 function LetterForm() {
   const [userPrompt, setUserPrompt] = useState("");
@@ -11,17 +17,17 @@ function LetterForm() {
   const generateLetter = async () => {
     setLoading(true);
     setLetter("");
-    // Infer language
+
     const isSwahili = /kiswahili|swahili|barua ya kiswahili/i.test(userPrompt);
     const lang = isSwahili ? "Kiswahili" : "English";
     setLanguage(lang);
 
-    const coherePrompt = `
+    const openrouterPrompt = `
 You are AI Barua—a warm, bilingual assistant. Write a heartfelt letter or email based on this request:
 "${userPrompt}"
 
-Sender: ${name || 'Your Name'}
-Recipient: ${recipient || 'Recipient'}
+Sender: ${name || "Your Name"}
+Recipient: ${recipient || "Recipient"}
 Language: ${lang}
 
 Guidelines:
@@ -30,25 +36,23 @@ Guidelines:
 `;
 
     try {
-      const response = await fetch("https://api.cohere.ai/v1/generate", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${import.meta.env.VITE_COHERE_API_KEY}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          model: "command-r-plus",
-          prompt: coherePrompt,
-          max_tokens: 400,
-          temperature: 0.7
-        })
+      const completion = await openRouter.chat.send({
+        model: "mistralai/mixtral-8x7b-instruct",
+        messages: [
+          { role: "system", content: "You are AI Barua, a bilingual assistant." },
+          { role: "user", content: openrouterPrompt }
+        ],
+        stream: false,
       });
-      const data = await response.json();
-      setLetter(data.generations?.[0]?.text?.trim() || "Sorry, no message received.");
+
+      const message = completion.choices?.[0]?.message?.content?.trim()
+        || "Sorry, no message received.";
+      setLetter(message);
     } catch (err) {
       console.error("❌ Error generating letter:", err);
       setLetter("Oops, something went wrong.");
     }
+
     setLoading(false);
   };
 
@@ -61,44 +65,40 @@ Guidelines:
   };
 
   return (
-    <div style={{ margin: "2rem 0", padding: "1rem", border: "1px solid #eee", borderRadius: "8px" }}>
-      <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-        <input
-          type="text"
-          value={name}
-          onChange={e => setName(e.target.value)}
-          placeholder="Your Name"
-          style={{ flex: 1 }}
-        />
-        <input
-          type="text"
-          value={recipient}
-          onChange={e => setRecipient(e.target.value)}
-          placeholder="Recipient Name"
-          style={{ flex: 1 }}
-        />
-      </div>
-      <textarea
+    <div>
+      <h2>Letter Form</h2>
+      <input
+        type="text"
+        placeholder="Enter your request..."
         value={userPrompt}
-        onChange={e => setUserPrompt(e.target.value)}
-        placeholder="Describe the letter or email you want..."
-        rows={4}
-        style={{ width: "100%" }}
-        disabled={loading}
+        onChange={(e) => setUserPrompt(e.target.value)}
       />
-      <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-        <button onClick={generateLetter} disabled={loading || !userPrompt.trim()}>
-          {loading ? "Generating..." : "Generate Letter"}
-        </button>
-        <button type="button" onClick={handleReset} style={{ background: "#eee", color: "#333" }} disabled={loading}>
-          Reset
-        </button>
-      </div>
-      <pre style={{ marginTop: 16, background: "#f9f9f9", padding: 12 }}>
-        {letter}
-      </pre>
+      <input
+        type="text"
+        placeholder="Your Name"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+      />
+      <input
+        type="text"
+        placeholder="Recipient"
+        value={recipient}
+        onChange={(e) => setRecipient(e.target.value)}
+      />
+      <button onClick={generateLetter} disabled={loading}>
+        {loading ? "Generating..." : "Generate Letter"}
+      </button>
+      <button onClick={handleReset}>Reset</button>
+
+      {letter && (
+        <div>
+          <strong>Generated Letter:</strong>
+          <p>{letter}</p>
+        </div>
+      )}
     </div>
   );
 }
 
 export default LetterForm;
+

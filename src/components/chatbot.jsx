@@ -1,4 +1,6 @@
+/* eslint-disable no-unused-vars */
 import { useState } from 'react';
+import { OpenRouter } from '@openrouter/sdk';
 
 const funnyFallbacks = [
   "Why did the letter go to school? To become a little b-r-i-g-h-t-e-r! 😄",
@@ -8,6 +10,10 @@ const funnyFallbacks = [
   "Did you hear about the AI who wrote a love letter? It was full of 'byte'-sized affection!",
   "I can write letters, but I can't lick the stamp. Yet."
 ];
+
+const openRouter = new OpenRouter({
+  apiKey: import.meta.env.VITE_OPENROUTER_API_KEY,
+});
 
 function Chatbot({ onGenerate }) {
   const [input, setInput] = useState('');
@@ -19,7 +25,6 @@ function Chatbot({ onGenerate }) {
   const [loading, setLoading] = useState(false);
 
   const handlePrompt = async (promptText) => {
-    // Joke intent
     if (/joke|funny|laugh|humor|bored|make me smile/i.test(promptText)) {
       const joke = funnyFallbacks[Math.floor(Math.random() * funnyFallbacks.length)];
       setResponse(joke);
@@ -31,13 +36,11 @@ function Chatbot({ onGenerate }) {
     setResponse('');
     setFullLetter('');
 
-    // Infer language
     const isSwahili = /kiswahili|swahili|barua ya kiswahili/i.test(promptText);
     const lang = isSwahili ? 'Kiswahili' : 'English';
     setLanguage(lang);
 
-    // Compose the prompt for Cohere
-    const coherePrompt = `
+    const openrouterPrompt = `
 You are AI Barua—a warm, bilingual assistant. Write a heartfelt letter or email based on this request:
 "${promptText}"
 
@@ -51,34 +54,32 @@ Guidelines:
 `;
 
     try {
-      const res = await fetch("https://api.cohere.ai/v1/generate", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${import.meta.env.VITE_COHERE_API_KEY}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          model: "command-r-plus",
-          prompt: coherePrompt,
-          max_tokens: 400,
-          temperature: 0.7
-        })
+      const completion = await openRouter.chat.send({
+        model: "mistralai/mixtral-8x7b-instruct",
+        messages: [
+          { role: "system", content: "You are AI Barua, a bilingual assistant." },
+          { role: "user", content: openrouterPrompt }
+        ],
+        stream: false,
       });
-      const data = await res.json();
-      setFullLetter(data.generations?.[0]?.text?.trim() || "Sorry, no message received.");
-      // Optionally, send to parent
+
+      const message = completion.choices?.[0]?.message?.content?.trim()
+        || "Sorry, no message received.";
+      setFullLetter(message);
+
       onGenerate && onGenerate({
         name,
         recipient,
         recipientEmail: '',
         language: lang,
-        customMessage: data.generations?.[0]?.text?.trim() || "",
+        customMessage: message,
         subject: ''
       });
     } catch (err) {
       setFullLetter("Oops, something went wrong.");
       console.error("❌ Error generating letter:", err);
     }
+
     setLoading(false);
   };
 
@@ -105,73 +106,38 @@ Guidelines:
   ];
 
   return (
-    <div style={{ margin: '2rem 0', padding: '1rem', border: '1px solid #eee', borderRadius: '8px' }}>
-      <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-        <input
-          type="text"
-          value={name}
-          onChange={e => setName(e.target.value)}
-          placeholder="Your Name"
-          style={{ flex: 1 }}
-        />
-        <input
-          type="text"
-          value={recipient}
-          onChange={e => setRecipient(e.target.value)}
-          placeholder="Recipient Name"
-          style={{ flex: 1 }}
-        />
-      </div>
-      <div style={{ marginBottom: 12, fontWeight: 'bold' }}>Choose a prompt or type your own:</div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
-        {examplePrompts.map((prompt, idx) => (
-          <button
-            key={idx}
-            onClick={() => handlePrompt(prompt)}
-            style={{
-              background: '#f1f1f1',
-              border: '1px solid #ccc',
-              borderRadius: 6,
-              padding: '0.5rem 1rem',
-              cursor: 'pointer'
-            }}
-            disabled={loading}
-          >
-            {prompt}
+    <div>
+      <h2>AI Barua Chatbot</h2>
+      <input
+        type="text"
+        placeholder="Enter your request..."
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+      />
+      <button onClick={() => handlePrompt(input)} disabled={loading}>
+        {loading ? "Generating..." : "Generate Letter"}
+      </button>
+      <button onClick={handleReset}>Reset</button>
+
+      <div>
+        <h3>Examples:</h3>
+        {examplePrompts.map((ex, i) => (
+          <button key={i} onClick={() => handlePrompt(ex)}>
+            {ex}
           </button>
         ))}
       </div>
-      <form
-        onSubmit={e => {
-          e.preventDefault();
-          if (input.trim()) handlePrompt(input.trim());
-        }}
-        style={{ display: 'flex', gap: '0.5rem', marginBottom: 8 }}
-      >
-        <input
-          type="text"
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          placeholder="Or type your own prompt here"
-          style={{ flex: 1, fontSize: '1rem' }}
-          disabled={loading}
-        />
-        <button type="submit" disabled={loading}>{loading ? "Generating..." : "Send"}</button>
-        <button type="button" onClick={handleReset} style={{ background: '#eee', color: '#333' }} disabled={loading}>
-          Reset
-        </button>
-      </form>
+
       {response && (
-        <div style={{ marginTop: '1rem', color: '#2c3e50', fontStyle: 'italic' }}>
-          {response}
+        <div>
+          <strong>Response:</strong> {response}
         </div>
       )}
+
       {fullLetter && (
-        <div style={{ marginTop: '1rem', background: '#f9f9f9', padding: '1rem', borderRadius: 8 }}>
-          <div style={{ marginBottom: 8, fontWeight: 'bold' }}>AI-Generated Letter/Email:</div>
-          <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit', fontSize: '1rem' }}>
-            {fullLetter}
-          </pre>
+        <div>
+          <strong>Generated Letter:</strong>
+          <p>{fullLetter}</p>
         </div>
       )}
     </div>
@@ -179,3 +145,4 @@ Guidelines:
 }
 
 export default Chatbot;
+

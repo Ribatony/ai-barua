@@ -1,22 +1,6 @@
-# 🔐 Secrets
+# Ignore environment files
 .env
-
-# 📦 Dependencies
-node_modules/
-
-# 🏗️ Build output
-dist/
-build/
-
-# 🧠 IDE settings
-.vscode/
-.idea/
-
-# 🧪 Logs
-*.log
-npm-debug.log*
-
-# 💻 OS junk
-.DS_Store
-Thumbs.db
-
+.env.local
+.env.development
+.env.production
+node_modules
