@@ -1,67 +1,35 @@
-/* eslint-disable no-unused-vars */
 import { useState } from "react";
-import { OpenRouter } from "@openrouter/sdk";
-
-const openRouter = new OpenRouter({
-  apiKey: import.meta.env.VITE_OPENROUTER_API_KEY,
-});
 
 function LetterForm() {
   const [userPrompt, setUserPrompt] = useState("");
   const [letter, setLetter] = useState("");
-  const [name, setName] = useState("");
-  const [recipient, setRecipient] = useState("");
-  const [language, setLanguage] = useState("English");
   const [loading, setLoading] = useState(false);
 
   const generateLetter = async () => {
     setLoading(true);
     setLetter("");
 
-    const isSwahili = /kiswahili|swahili|barua ya kiswahili/i.test(userPrompt);
-    const lang = isSwahili ? "Kiswahili" : "English";
-    setLanguage(lang);
-
-    const openrouterPrompt = `
-You are AI Barua—a warm, bilingual assistant. Write a heartfelt letter or email based on this request:
-"${userPrompt}"
-
-Sender: ${name || "Your Name"}
-Recipient: ${recipient || "Recipient"}
-Language: ${lang}
-
-Guidelines:
-- Sound human
-- Be clear and empathetic
-`;
-
     try {
-      const completion = await openRouter.chat.send({
-        model: "mistralai/mixtral-8x7b-instruct",
-        messages: [
-          { role: "system", content: "You are AI Barua, a bilingual assistant." },
-          { role: "user", content: openrouterPrompt }
-        ],
-        stream: false,
+      const response = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "mistralai/mixtral-8x7b-instruct",
+          messages: [
+            { role: "system", content: "You are AI Barua, a bilingual assistant." },
+            { role: "user", content: userPrompt }
+          ]
+        }),
       });
 
-      const message = completion.choices?.[0]?.message?.content?.trim()
-        || "Sorry, no message received.";
-      setLetter(message);
+      const data = await response.json();
+      setLetter(data.choices?.[0]?.message?.content?.trim() || "No message received.");
     } catch (err) {
-      console.error("❌ Error generating letter:", err);
+      console.error("Error:", err);
       setLetter("Oops, something went wrong.");
     }
 
     setLoading(false);
-  };
-
-  const handleReset = () => {
-    setUserPrompt("");
-    setLetter("");
-    setName("");
-    setRecipient("");
-    setLanguage("English");
   };
 
   return (
@@ -73,22 +41,9 @@ Guidelines:
         value={userPrompt}
         onChange={(e) => setUserPrompt(e.target.value)}
       />
-      <input
-        type="text"
-        placeholder="Your Name"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-      />
-      <input
-        type="text"
-        placeholder="Recipient"
-        value={recipient}
-        onChange={(e) => setRecipient(e.target.value)}
-      />
       <button onClick={generateLetter} disabled={loading}>
         {loading ? "Generating..." : "Generate Letter"}
       </button>
-      <button onClick={handleReset}>Reset</button>
 
       {letter && (
         <div>
